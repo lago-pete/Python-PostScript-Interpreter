@@ -1,5 +1,5 @@
-
 import re
+import HW5
 def tokenize(s):
     return re.findall("/?[a-zA-Z()][a-zA-Z0-9_()]*|[-]?[0-9]+|[}{]+|%.*|[^ \t\n]", s)
 
@@ -21,6 +21,19 @@ def groupMatching2(it):
             # paranthesis, it will be appended to the list we are constructing
             # as a whole.
             res.append(groupMatching2(it))
+        elif c.isdigit():
+            c = int(c)
+            res.append(c)
+        elif isinstance(c, str):
+            if c == 'True':
+                c = True
+                res.append(c)
+            elif c == 'False':
+                c = False
+                res.append(c)
+            else:
+                c = str(c)
+                res.append(c)
         else:
             res.append(c)
     return False
@@ -39,6 +52,20 @@ def parse(L):
             return False
         elif c=='{':
             res.append(groupMatching2(it))
+            
+        elif c.isdigit():
+            c = int(c)
+            res.append(c)
+        elif isinstance(c, str):
+            if c == 'True':
+                c = True
+                res.append(c)
+            elif c == 'False':
+                c = False
+                res.append(c)
+            else:
+                c = str(c)
+                res.append(c)
         else:
             res.append(c)
     return res
@@ -56,6 +83,7 @@ def interpretSPS(code): # code is a code array
 # Copy this to your HW5.py file>
 def interpreter(s): # s is a string
     interpretSPS(parse(tokenize(s)))
+    
 
 
 #clear opstack and dictstack
@@ -129,6 +157,10 @@ input6 = """
         stack
         """
 
-print(tokenize(input1))
-print(parse(tokenize(input1)))
+#print(tokenize(input1))
+#print(parse(tokenize(input1)))
+print(parse(['/pow2', '{', '/n', 'exch', 'def', '(Pow2_of_n_is)', 'dup', '8', 'n', 
+'48', 'add', 'put', '1', 'n', '-1', '1', '{', 'pop', '2', 'mul', '}', 'for', 
+'}', 'def', '(Calculating_pow2_of_9)', 'dup', '20', 'get', '48', 'sub', 
+'pow2', 'stack']))
 
