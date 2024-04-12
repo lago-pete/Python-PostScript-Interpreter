@@ -274,7 +274,6 @@ def put():
         replace = opPop()
         index = opPop()
         og = opPop()  
-        
         temp = og.replace("(", "").replace(")", "")
         
         if isinstance(temp, str) and isinstance(index, int) and 0 <= index < len(temp) and 0 <= replace <= 255:
@@ -283,7 +282,7 @@ def put():
             updated = "(" + updated + ")"
            
             for i in range(len(opstack)):
-                if isinstance(opstack[i], str) and opstack[i] == temp:
+                if opstack[i] == temp:
                     opstack[i] = updated
            
             for d in dictstack:
@@ -410,4 +409,4 @@ def testPut():
     
     
 #This is where i will test the functions
-#print(testPut())
+print(testPut())
