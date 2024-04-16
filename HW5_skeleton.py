@@ -3,9 +3,11 @@ import re
 
 opstack = []  
 dictstack = []  
-teststack = []
 
-commands = ['opPop','opPush','dictPop','dictPush','define', 'lookup', 'add', 'sub', 'mul', 'div','mod','eq', 'lt', 'gt', 'length', 'get', 'getinterval', 'put', 'dup', 'exch', 'pop', 'copy', 'clear', 'stack','roll', 'psDict', 'begin', 'end', 'psDef', 'if', 'ifelse', 'for']
+
+
+
+commands = ['opPop','opPush','dictPop','dictPush','define', 'lookup', 'add', 'sub', 'mul', 'div','mod','eq', 'lt', 'gt', 'length', 'get', 'getinterval', 'put', 'dup', 'exch', 'pop', 'copy', 'clear', 'stack','roll', 'dict', 'begin', 'end', 'def', 'if', 'ifelse', 'for']
 
 
 
@@ -91,15 +93,16 @@ def interpretSPS(code):
     count = 0
     for token in code:
         count += 1
-        if isinstance(token, list):  # It's a code array, handle nested blocks
-            interpretSPS(token)
-        elif token == 'def':
+        if isinstance(token,str) and token.startswith('/') and isinstance(code[count],list):
+            opPush(token)
+            opPush(code.pop(count))
             continue
-        elif isinstance(token, str) and token.startswith('/'):
-            value = code.pop(count)
-            name = token
-            define(name, value)
+        if isinstance(token, list):  # It's a code array, handle nested blocks
+            opPush(token)
         elif isinstance(token, str):
+            if isinstance(token,str) and token.startswith('/'):
+                opPush(token)
+                continue
             if lookup(token):
                 continue
             elif token in commands:
@@ -190,7 +193,7 @@ def commanding(token):
         elif token == 'roll':
             roll()
             return
-        elif token == 'psDict':
+        elif token == 'dict':
             psDict()
             return
         elif token == 'begin':
@@ -199,7 +202,7 @@ def commanding(token):
         elif token == 'end':
             end()
             return
-        elif token == 'psDef':
+        elif token == 'def':
             psDef()
             return
         elif token == 'if':
@@ -230,9 +233,9 @@ def psIfelse():
     condition = opPop()
     
     if condition:
-        opPush(true_block)
+        interpretSPS(true_block)
     else:
-        opPush(false_block)
+        interpretSPS(false_block)
 
 def psFor(start, end, increment, block):
     for i in range(start, end, increment):
@@ -245,9 +248,6 @@ def psFor(start, end, increment, block):
 
 
     #clear opstack and dictstack
-def clear():
-    del opstack[:]
-    del dictstack[:]
 
 
 
@@ -353,7 +353,7 @@ def dictPop():
     
 
 def dictPush(d):
-    dictstack.append(d)
+   dictstack.append(d)
     
 
 def define(name, value):
@@ -372,11 +372,18 @@ def lookup(name):
     else:
         if name[0] != '/':
             name = '/' + name
-            
         for dic in reversed(dictstack):
             if name in dic:
-                interpretSPS(dic[name].copy())
-                return True
+                if isinstance(dic[name], list):
+                    temp = dic[name].copy()
+                    interpretSPS(temp)
+                    return True 
+                else:
+                    temp = [dic[name]]
+                    interpretSPS(temp)
+                    return True
+                   
+        
         return False
 
     
@@ -535,7 +542,6 @@ def length():
     temp = opPop()
     if isinstance(temp, str):
         temp = len(temp)
-        print("Length = ", temp - 2)
         opPush(temp - 2)
         return 
     else:
@@ -626,7 +632,7 @@ def pop():
 
 def clear():
     opstack.clear()
-    opstack.clear()
+    dictstack.clear()
     
 
 def exch():
@@ -663,18 +669,17 @@ def stack():
     
     
 def psDict():
-    if not opstack:
-        return False
+    if len(opstack) > 0:
+        opPop()
+        opPush({})
     else:
-        temp = opstack.pop()
-        temp_dic = {}
-        opstack.append(temp_dic)
-        
-        
+        return False
+    
+    
 def begin():
-    temp = opstack.pop()
-    if isinstance(temp, dict):
-        dictPush(temp)
+    if len(opstack) > 0:
+        temp = opPop()
+        
     else:
         return False
     
@@ -683,9 +688,6 @@ def end():
     temp = dictstack.pop()
     if isinstance(temp, dict):
         return True
-    else:
-        dictPush(temp)
-        return False 
 
 
 def psDef():
@@ -710,7 +712,17 @@ def interpreter(s): # s is a string
 #print(parse(tokenize(input2)))
 #interpreter(input1)
 
-interpreter(input1)
-interpreter(input2)
+#interpreter(input1)
+clear()
+#interpreter(input2)
+
+clear()
+interpreter(input3)
+clear()
+#interpreter(input4)
+clear()
+#interpreter(input5)
+clear()
+#interpreter(input6)
 
 

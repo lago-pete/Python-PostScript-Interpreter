@@ -376,10 +376,7 @@ def end():
     temp = dictstack.pop()
     if isinstance(temp, dict):
         return True
-    else:
-        dictPush(temp)
-        return False 
-
+    
 
 def psDef():
     temp_value = opstack.pop()
