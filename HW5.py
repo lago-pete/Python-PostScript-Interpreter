@@ -1,9 +1,9 @@
 #Peter Lagonegro
 
+from HW5_skeleton import *
 
 opstack = []  
 dictstack = []  
-
 
 def opPop():
     if not opstack:
@@ -388,7 +388,13 @@ def psDef():
     if isinstance(temp_name, str):
         define(temp_name, temp_value)
 
-   
+
+
+
+
+# Copy this to your HW5.py file>
+def interpreter(s): # s is a string
+    interpretSPS(parse(tokenize(s)))
     
 #Test Section -------------------------
     
@@ -407,6 +413,9 @@ def testPut():
     return True
     
     
-    
+ 
+
 #This is where i will test the functions
 #print(testPut())
+
+print(interpreter(input1))

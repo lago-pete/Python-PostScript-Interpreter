@@ -1,5 +1,14 @@
 import re
-import HW5
+#from HW5 import *
+
+opstack = []  
+dictstack = []  
+teststack = []
+
+commands = ['opPop','opPush','dictPop','dictPush','define', 'lookup', 'add', 'sub', 'mul', 'div','mod','eq', 'lt', 'gt', 'length', 'get', 'getinterval', 'put', 'dup', 'exch', 'pop', 'copy', 'clear', 'stack','roll', 'psDict', 'begin', 'end', 'psDef', 'if', 'ifelse', 'for']
+
+
+
 def tokenize(s):
     return re.findall("/?[a-zA-Z()][a-zA-Z0-9_()]*|[-]?[0-9]+|[}{]+|%.*|[^ \t\n]", s)
 
@@ -76,24 +85,174 @@ def parse(L):
 # function of the whole project, but it will have a very regular and obvious
 # structure if you've followed the plan of the assignment.
 #
-def interpretSPS(code): # code is a code array
-    pass
 
 
-# Copy this to your HW5.py file>
-def interpreter(s): # s is a string
-    interpretSPS(parse(tokenize(s)))
+def interpretSPS(code):
+    count = 0
+    for token in code:
+        count += 1
+        if isinstance(token, list):  # It's a code array, handle nested blocks
+            interpretSPS(token)
+        elif token == 'def':
+            continue
+        elif isinstance(token, str) and token.startswith('/'):
+            value = code.pop(count)
+            name = token
+            define(name, value)
+        elif isinstance(token, str):
+            if lookup(token):
+                continue
+            elif token in commands:
+                commanding(token)
+                continue
+            else:
+                opPush(token)
+        else:
+            opPush(token)
+          
     
 
 
-#clear opstack and dictstack
+def commanding(token):
+    if token in commands:
+        if token == 'opPop':
+            opPop()
+            return 
+        elif token == 'opPush':
+            opPush()
+            return
+        elif token == 'dictPop':
+            dictPop()
+            return
+        elif token == 'dictPush':
+            dictPush()
+            return
+        elif token == 'define':
+            define()
+            return
+        elif token == 'lookup':
+            lookup()
+            return
+        elif token == 'add':
+            add()
+            return
+        elif token == 'sub':
+            sub()
+            return
+        elif token == 'mul':
+            mul()
+            return
+        elif token == 'div':
+            div()
+            return
+        elif token == 'mod':
+            mod()
+            return
+        elif token == 'eq':
+            eq()
+            return
+        elif token == 'lt':
+            lt()
+            return
+        elif token == 'gt':
+            gt()
+            return
+        elif token == 'length':
+            length()
+            return
+        elif token == 'get':
+            get()
+            return
+        elif token == 'getinterval':
+            getinterval()
+            return
+        elif token == 'put':
+            put()
+            return
+        elif token == 'dup':
+            dup()
+            return
+        elif token == 'exch':
+            exch()
+            return
+        elif token == 'pop':
+            pop()
+            return
+        elif token == 'copy':
+            copy()
+            return
+        elif token == 'clear':
+            clear()
+            return
+        elif token == 'stack':
+            stack()
+            return
+        elif token == 'roll':
+            roll()
+            return
+        elif token == 'psDict':
+            psDict()
+            return
+        elif token == 'begin':
+            begin()
+            return
+        elif token == 'end':
+            end()
+            return
+        elif token == 'psDef':
+            psDef()
+            return
+        elif token == 'if':
+            psIf()
+            return
+        elif token == 'ifelse':
+            psIfelse()
+            return
+        elif token == 'for':
+            psFor()
+            return
+
+
+
+#-------------------------Helper Functions------------------------------------      
+            
+            
+def psIf():
+    condition = opPop()
+    if condition:
+        interpretSPS()
+
+def psIfelse():
+    false_block = opPop() 
+    
+    true_block = opPop()
+    
+    condition = opPop()
+    
+    if condition:
+        opPush(true_block)
+    else:
+        opPush(false_block)
+
+def psFor(start, end, increment, block):
+    for i in range(start, end, increment):
+        opPush(i)
+        interpretSPS(block)
+
+
+
+
+
+
+    #clear opstack and dictstack
 def clear():
     del opstack[:]
     del dictstack[:]
 
 
-#testing
 
+
+#testing
 input1 = """
         /square {
                dup mul
@@ -156,11 +315,402 @@ input6 = """
         (Calculating_pow2_of_9) dup 20 get 48 sub pow2
         stack
         """
+   
 
-#print(tokenize(input1))
-#print(parse(tokenize(input1)))
-print(parse(['/pow2', '{', '/n', 'exch', 'def', '(Pow2_of_n_is)', 'dup', '8', 'n', 
-'48', 'add', 'put', '1', 'n', '-1', '1', '{', 'pop', '2', 'mul', '}', 'for', 
-'}', 'def', '(Calculating_pow2_of_9)', 'dup', '20', 'get', '48', 'sub', 
-'pow2', 'stack']))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#------------------------------------------------------------------------------
+
+
+def opPop():
+    if not opstack:
+        return False
+    else:
+        return opstack.pop()
+    
+
+def opPush(value):
+    opstack.append(value)
+        
+    
+def dictPop():
+    if not dictstack:
+        return 0
+    else:
+        return dictstack.pop()
+    
+
+def dictPush(d):
+    dictstack.append(d)
+    
+
+def define(name, value):
+    if name is None or value is None:
+        return False
+    if not isinstance(name, str):
+        return False
+    temp = {name:value}
+    dictPush(temp)
+    
+    
+def lookup(name):
+    if not isinstance(name, str):
+        print("No name was entered")
+        return False
+    else:
+        if name[0] != '/':
+            name = '/' + name
+            
+        for dic in reversed(dictstack):
+            if name in dic:
+                interpretSPS(dic[name].copy())
+                return True
+        return False
+
+    
+def add():
+    if len(opstack) < 2:
+        print("Not enough Arguements")
+        return False
+    arg1 = opstack.pop()
+    arg2 = opstack.pop()
+    
+    if isinstance(arg1, int):
+       if isinstance(arg2, int):
+           opstack.append(arg1+arg2)
+           print("Successfully added")
+           return
+    if isinstance(arg1, float):
+       if isinstance(arg2, float):
+           opstack.append(arg1+arg2)
+           print("Successfully added")
+           return
+    else:
+        print("Incorrect type")
+         
+    opPush(arg2)
+    opPush(arg1)
+            
+        
+def sub():
+    if len(opstack) < 2:
+        return False
+    arg2 = opstack.pop()
+    arg1 = opstack.pop()
+    
+    if isinstance(arg1, int):
+       if isinstance(arg2, int):
+           opstack.append(arg1-arg2)
+           return
+    if isinstance(arg1, float):
+       if isinstance(arg2, float):
+           opstack.append(arg1-arg2)
+           return
+    
+        
+    opPush(arg2)
+    opPush(arg1)
+  
+
+def mul():
+    if len(opstack) < 2:
+        return False
+    arg1 = opstack.pop()
+    arg2 = opstack.pop()
+    
+    if isinstance(arg1, int):
+       if isinstance(arg2, int):
+           opstack.append(arg1*arg2)
+           return
+    if isinstance(arg1, float):
+       if isinstance(arg2, float):
+           opstack.append(arg1*arg2)
+           return
+    
+        
+    opPush(arg2)
+    opPush(arg1)
+    
+
+def div():
+    
+    if len(opstack) < 2:
+        return False
+    arg2 = opstack.pop()
+    arg1 = opstack.pop()
+    
+    if isinstance(arg1, int):
+       if isinstance(arg2, int):
+           opstack.append(arg1/arg2)
+           return
+    if isinstance(arg1, float):
+       if isinstance(arg2, float):
+           opstack.append(arg1/arg2)
+           return
+    
+        
+    opPush(arg2)
+    opPush(arg1)
+
+
+def mod():
+    
+    if len(opstack) < 2:
+        return False
+    arg2 = opstack.pop()
+    arg1 = opstack.pop()
+    
+    if isinstance(arg1, int):
+       if isinstance(arg2, int):
+           opstack.append(arg1 % arg2)
+           return
+    if isinstance(arg1, float):
+       if isinstance(arg2, float):
+           opstack.append(arg1 % arg2)
+           return
+          
+        
+    opPush(arg2)
+    opPush(arg1)
+    
+    
+def eq():
+    if len(opstack) < 2:
+        
+        return False
+    arg1 = opstack.pop()
+    arg2 = opstack.pop()
+    
+    if arg1 == arg2:
+        
+        opPush(True)
+    else:
+        opPush(False)
+        return False
+        
+
+def lt():
+    if len(opstack) < 2:
+       
+        return False
+    arg1 = opstack.pop()
+    arg2 = opstack.pop()
+    
+    if arg1 > arg2:
+        opPush(True)
+        
+        return True
+    else:
+        opPush(False)
+        return False
+    
+    
+def gt():
+    if len(opstack) < 2:
+        return False
+    arg1 = opstack.pop()
+    arg2 = opstack.pop()
+    
+    if arg1 < arg2:
+        opPush(True)
+        
+    else:
+        opPush(False)
+        return False
+  
+
+def length():
+    temp = opPop()
+    if isinstance(temp, str):
+        temp = len(temp)
+        print("Length = ", temp - 2)
+        opPush(temp - 2)
+        return 
+    else:
+        return False
+    
+        
+def get():
+    temp = opPop()
+    temp2 = opPop()
+    if isinstance(temp2, str):
+        temp2 = temp2.replace("(", "").replace(")", "")
+        value = temp2[temp]
+        value = ord(value)
+        opPush(value)
+        return True
+    else:
+        
+        return False
+    
+    
+def getinterval():
+    num_char = opPop()
+    start_index = opPop()
+    
+    temp = opPop()
+    
+    if isinstance(temp, str):
+        temp = temp.replace("(", "").replace(")", "")
+        str_split = temp[start_index: (start_index+num_char)]
+        str_split = "(" +  str_split + ")"
+        opPush(str_split)
+        
+        return 
+    else:
+        
+        opPush(temp)
+        return False
+    
+    
+def put():
+    if len(opstack) >= 3:
+        replace = opPop()
+        index = opPop()
+        og = opPop()  
+        temp = og.replace("(", "").replace(")", "")
+        
+        if isinstance(temp, str) and isinstance(index, int) and 0 <= index < len(temp) and 0 <= replace <= 255:
+            newChar = chr(replace)
+            updated = temp[:index] + newChar + temp[index+1:]
+            updated = "(" + updated + ")"
+           
+            for i in range(len(opstack)):
+                if opstack[i] == temp:
+                    opstack[i] = updated
+           
+            for d in dictstack:
+                for key, value in d.items():
+                    if value == og:
+                        d[key] = updated
+            opPush(updated)  
+        else:
+            print
+            return False
+    else:
+        print
+        return False
+
+
+def dup():
+    if not opstack:
+        
+        return False
+    temp1 = opPop()
+    temp2 = temp1
+    opPush(temp2)
+    opPush(temp1)
+    
+    
+def copy():
+    count = opPop()
+    copied = opstack[-count:]
+    opstack.extend(copied)
+        
+
+def pop():
+    return opPop()
+
+
+def clear():
+    opstack.clear()
+    opstack.clear()
+    
+
+def exch():
+    if not opstack:
+        
+        return False
+    temp1 = opPop()
+    temp2 = opPop()
+    opPush(temp1)
+    opPush(temp2)
+
+
+def roll():
+    num_temp = opPop()
+    move = opPop()
+    
+    
+    temp_move = opstack.index(num_temp) + move
+    opstack.remove(num_temp)
+    
+    if temp_move > len(opstack):
+        opstack.append(num_temp)
+    else:
+        opstack.insert(temp_move, num_temp)
+    
+        
+def stack():
+    if not opstack:
+        
+        return False
+    else:
+        for temp in reversed(opstack):
+            print(temp)
+    
+    
+def psDict():
+    if not opstack:
+        return False
+    else:
+        temp = opstack.pop()
+        temp_dic = {}
+        opstack.append(temp_dic)
+        
+        
+def begin():
+    temp = opstack.pop()
+    if isinstance(temp, dict):
+        dictPush(temp)
+    else:
+        return False
+    
+    
+def end():
+    temp = dictstack.pop()
+    if isinstance(temp, dict):
+        return True
+    else:
+        dictPush(temp)
+        return False 
+
+
+def psDef():
+    temp_value = opstack.pop()
+    temp_name = opstack.pop()
+    
+    if isinstance(temp_name, str):
+        define(temp_name, temp_value)
+
+
+
+
+
+# Copy this to your HW5.py file>
+def interpreter(s): # s is a string
+    interpretSPS(parse(tokenize(s)))
+    clear()
+    
+
+
+#print(tokenize(input2))
+#print(parse(tokenize(input2)))
+#interpreter(input1)
+
+interpreter(input1)
+interpreter(input2)
+
 
