@@ -101,7 +101,7 @@ def interpretSPS(code):
             opPush(token)
             opPush(code.pop(count))
             continue
-        if isinstance(token, list):  # It's a code array, handle nested blocks
+        if isinstance(token, list):  
             opPush(token)
         elif isinstance(token, str):
             if isinstance(token,str) and token.startswith('/'):
@@ -657,14 +657,14 @@ def roll():
     if y > len(opstack):
         return False
     x = x % y if x > 0 else -(-x % y)
-    segment = opstack[-y:]
+    temp = opstack[-y:]
 
     if x > 0: 
-        segment = segment[-x:] + segment[:-x]
+        temp = temp[-x:] + temp[:-x]
     else:  
         x = -x 
-        segment = segment[x:] + segment[:x]
-    opstack[-y:] = segment
+        temp = temp[x:] + temp[:x]
+    opstack[-y:] = temp
 
 
     
@@ -712,28 +712,31 @@ def psDef():
 
 
 
-# Copy this to your HW5.py file>
+#--------------------------Runner----------------------------------------------
 def interpreter(s): # s is a string
     interpretSPS(parse(tokenize(s)))
     clear()
     
 
 
+
+
+#---------------------------------Testing---------------------------------------
 #print(tokenize(input2))
 #print(parse(tokenize(input2)))
 
 
 
-interpreter(input1)
-clear()
-interpreter(input2)
-clear()
-interpreter(input3)
-clear()
-interpreter(input4)
-clear()
-interpreter(input5)
-clear()
-interpreter(input6)
+#interpreter(input1)
+#clear()
+#interpreter(input2)
+#clear()
+#interpreter(input3)
+#clear()
+#interpreter(input4)
+#clear()
+#interpreter(input5)
+#clear()
+#interpreter(input6)
 
 
