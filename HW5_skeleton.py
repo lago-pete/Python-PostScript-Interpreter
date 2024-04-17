@@ -661,8 +661,6 @@ def roll():
     else:  
         x = -x 
         segment = segment[x:] + segment[:x]
-
-    # Replace the rolled segment back into the original stack
     opstack[-y:] = segment
 
 
@@ -729,10 +727,10 @@ clear()
 clear()
 #interpreter(input3)
 clear()
-interpreter(input4)
+#interpreter(input4)
 clear()
 #interpreter(input5)
 clear()
-#interpreter(input6)
+interpreter(input6)
 
 
