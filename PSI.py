@@ -1,40 +1,29 @@
-#Peter Lagonegro
-
-
-
 import re
 
+#Peter Lagonegro
 
-opstack = []  
-dictstack = []  
+# Importing the regular expression module
 
-
-
-
+# List of available commands
 commands = ['opPop','opPush','dictPop','dictPush','define', 'lookup', 'add', 'sub', 'mul', 'div','mod','eq', 'lt', 'gt', 'length', 'get', 'getinterval', 'put', 'dup', 'exch', 'pop', 'copy', 'clear', 'stack','roll', 'dict', 'begin', 'end', 'def', 'if', 'ifelse', 'for']
 
+# Stack for operators
+opstack = []
 
+# Stack for dictionaries
+dictstack = []
 
+# Tokenize the input string
 def tokenize(s):
     return re.findall("/?[a-zA-Z()][a-zA-Z0-9_()]*|[-]?[0-9]+|[}{]+|%.*|[^ \t\n]", s)
 
-
-# complete this function
-# The it argument is an iterator.
-# The sequence of return characters should represent a list of properly nested
-# tokens, where the tokens between '{' and '}' is included as a sublist. If the
-# parenteses in the input iterator is not properly nested, returns False.
+# Group matching parentheses
 def groupMatching2(it):
     res = []
     for c in it:
         if c == '}':
             return res
         elif c=='{':
-            # Note how we use a recursive call to group the tokens inside the
-            # inner matching parenthesis.
-            # Once the recursive call returns the code array for the inner
-            # paranthesis, it will be appended to the list we are constructing
-            # as a whole.
             res.append(groupMatching2(it))
         elif c.isdigit():
             c = int(c)
@@ -53,21 +42,15 @@ def groupMatching2(it):
             res.append(c)
     return False
 
-
-# Complete this function
-# Function to parse a list of tokens and arrange the tokens between { and } braces
-# as code-arrays.
-# Properly nested parentheses are arranged into a list of properly nested lists.
+# Parse the tokenized code
 def parse(L):
     res = []
     it = iter(L)
     for c in it:
-        if c=='}':  #non matching closing paranthesis; return false since there is
-                    # a syntax error in the Postscript code.
+        if c=='}':
             return False
         elif c=='{':
             res.append(groupMatching2(it))
-            
         elif c.isdigit():
             c = int(c)
             res.append(c)
@@ -85,14 +68,7 @@ def parse(L):
             res.append(c)
     return res
 
-
-# Write the necessary code here; again write
-# auxiliary functions if you need them. This will probably be the largest
-# function of the whole project, but it will have a very regular and obvious
-# structure if you've followed the plan of the assignment.
-#
-
-
+# Interpret the Postscript code
 def interpretSPS(code):
     count = 0
     for token in code:
@@ -101,7 +77,7 @@ def interpretSPS(code):
             opPush(token)
             opPush(code.pop(count))
             continue
-        if isinstance(token, list):  
+        if isinstance(token, list):
             opPush(token)
         elif isinstance(token, str):
             if isinstance(token,str) and token.startswith('/'):
@@ -116,10 +92,8 @@ def interpretSPS(code):
                 opPush(token)
         else:
             opPush(token)
-          
-    
 
-
+# Execute the command
 def commanding(token):
     if token in commands:
         if token == 'opPop':
@@ -219,46 +193,34 @@ def commanding(token):
             psFor()
             return
 
-
-
-#-------------------------Helper Functions------------------------------------      
-            
-            
+# If condition is true, execute the block
 def psIf():
     block = opPop()
     condition = opPop()
     if condition:
         interpretSPS(block)
 
+# If condition is true, execute the true block, otherwise execute the false block
 def psIfelse():
     false_block = opPop() 
-    
     true_block = opPop()
-    
     condition = opPop()
-    
     if condition:
         interpretSPS(true_block)
     else:
         interpretSPS(false_block)
 
+# Execute a block for a range of values
 def psFor():
     block = opPop()  
     end = int(opPop())  
-    
     increment = int(opPop())      
     start = int(opPop())  
-    
-
     for i in range(start, end-1 , increment):
         opPush(i)
         interpretSPS(block)
 
-
-
-
-
-#testing
+# Testing inputs
 input1 = """
         /square {
                dup mul
@@ -322,46 +284,31 @@ input6 = """
         stack
         """
    
+# Stack Functions
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#------------------------------------------------------------------------------
-
-
+# Remove and return the top element from the operator stack
 def opPop():
     if not opstack:
         return False
     else:
         return opstack.pop()
-    
 
+# Push a value onto the operator stack
 def opPush(value):
     opstack.append(value)
         
-    
+# Remove and return the top element from the dictionary stack
 def dictPop():
     if not dictstack:
         return 0
     else:
         return dictstack.pop()
-    
 
+# Push a dictionary onto the dictionary stack
 def dictPush(d):
    dictstack.append(d)
-    
 
+# Define a name-value pair in the top dictionary on the dictionary stack
 def define(name, value):
     if name is None or value is None:
         return False
@@ -369,8 +316,8 @@ def define(name, value):
         return False
     temp = {name:value}
     dictPush(temp)
-    
-    
+
+# Look up a name in the dictionary stack
 def lookup(name):
     if not isinstance(name, str):
         return False
@@ -387,41 +334,33 @@ def lookup(name):
                     temp = [dic[name]]
                     interpretSPS(temp)
                     return True
-                   
-        
         return False
 
-    
+# Arithmetic operations
+
+# Add the top two elements from the operator stack
 def add():
     if len(opstack) < 2:
-        
         return False
     arg1 = opstack.pop()
     arg2 = opstack.pop()
-    
     if isinstance(arg1, int):
        if isinstance(arg2, int):
            opstack.append(arg1+arg2)
-          
            return
     if isinstance(arg1, float):
        if isinstance(arg2, float):
            opstack.append(arg1+arg2)
-           
            return
-    
-       
-         
     opPush(arg2)
     opPush(arg1)
-            
-        
+
+# Subtract the top two elements from the operator stack
 def sub():
     if len(opstack) < 2:
         return False
     arg2 = opstack.pop()
     arg1 = opstack.pop()
-    
     if isinstance(arg1, int):
        if isinstance(arg2, int):
            opstack.append(arg1-arg2)
@@ -430,18 +369,15 @@ def sub():
        if isinstance(arg2, float):
            opstack.append(arg1-arg2)
            return
-    
-        
     opPush(arg2)
     opPush(arg1)
-  
 
+# Multiply the top two elements from the operator stack
 def mul():
     if len(opstack) < 2:
         return False
     arg1 = opstack.pop()
     arg2 = opstack.pop()
-    
     if isinstance(arg1, int):
        if isinstance(arg2, int):
            opstack.append(arg1*arg2)
@@ -450,19 +386,15 @@ def mul():
        if isinstance(arg2, float):
            opstack.append(arg1*arg2)
            return
-    
-        
     opPush(arg2)
     opPush(arg1)
-    
 
+# Divide the top two elements from the operator stack
 def div():
-    
     if len(opstack) < 2:
         return False
     arg2 = opstack.pop()
     arg1 = opstack.pop()
-    
     if isinstance(arg1, int):
        if isinstance(arg2, int):
            opstack.append(arg1/arg2)
@@ -471,19 +403,15 @@ def div():
        if isinstance(arg2, float):
            opstack.append(arg1/arg2)
            return
-    
-        
     opPush(arg2)
     opPush(arg1)
 
-
+# Take the modulus of the top two elements from the operator stack
 def mod():
-    
     if len(opstack) < 2:
         return False
     arg2 = opstack.pop()
     arg1 = opstack.pop()
-    
     if isinstance(arg1, int):
        if isinstance(arg2, int):
            opstack.append(arg1 % arg2)
@@ -492,57 +420,47 @@ def mod():
        if isinstance(arg2, float):
            opstack.append(arg1 % arg2)
            return
-          
-        
     opPush(arg2)
     opPush(arg1)
-    
-    
+
+# Check if the top two elements from the operator stack are equal
 def eq():
     if len(opstack) < 2:
-        
         return False
     arg1 = opstack.pop()
     arg2 = opstack.pop()
-    
     if arg1 == arg2:
-        
         opPush(True)
     else:
         opPush(False)
         return False
-        
 
+# Check if the top element from the operator stack is less than the second top element
 def lt():
     if len(opstack) < 2:
-       
         return False
     arg1 = opstack.pop()
     arg2 = opstack.pop()
-    
     if arg1 > arg2:
         opPush(True)
-        
         return True
     else:
         opPush(False)
         return False
-    
-    
+
+# Check if the top element from the operator stack is greater than the second top element
 def gt():
     if len(opstack) < 2:
         return False
     arg1 = opstack.pop()
     arg2 = opstack.pop()
-    
     if arg1 < arg2:
         opPush(True)
-        
     else:
         opPush(False)
         return False
-  
 
+# Get the length of the top element from the operator stack
 def length():
     temp = opPop()
     if isinstance(temp, str):
@@ -551,8 +469,8 @@ def length():
         return 
     else:
         return False
-    
-        
+
+# Get the character at the specified index from the top element of the operator stack
 def get():
     temp = opPop()
     temp2 = opPop()
@@ -563,45 +481,37 @@ def get():
         opPush(value)
         return True
     else:
-        
         return False
-    
-    
+
+# Get a substring from the top element of the operator stack
 def getinterval():
     num_char = opPop()
     start_index = opPop()
-    
     temp = opPop()
-    
     if isinstance(temp, str):
         temp = temp.replace("(", "").replace(")", "")
         str_split = temp[start_index: (start_index+num_char)]
         str_split = "(" +  str_split + ")"
         opPush(str_split)
-        
         return 
     else:
-        
         opPush(temp)
         return False
-    
-    
+
+# Replace a character at the specified index in the top element of the operator stack
 def put():
     if len(opstack) >= 3:
         replace = opPop()
         index = opPop()
         og = opPop()  
         temp = og.replace("(", "").replace(")", "")
-        
         if isinstance(temp, str) and isinstance(index, int) and 0 <= index < len(temp) and 0 <= replace <= 255:
             newChar = chr(replace)
             updated = temp[:index] + newChar + temp[index+1:]
             updated = "(" + updated + ")"
-           
             for i in range(len(opstack)):
                 if opstack[i] == og:
                     del opstack[i]
-           
             for d in dictstack:
                 for key, value in d.items():
                     if value == og:
@@ -614,51 +524,47 @@ def put():
         print
         return False
 
-
+# Duplicate the top element of the operator stack
 def dup():
     if not opstack:
-        
         return False
     temp1 = opPop()
     temp2 = temp1
     opPush(temp2)
     opPush(temp1)
-    
-    
+
+# Copy the top n elements from the operator stack
 def copy():
     count = opPop()
     copied = opstack[-count:]
     opstack.extend(copied)
-        
 
+# Remove and return the top element from the operator stack
 def pop():
     return opPop()
 
-
+# Clear the operator and dictionary stacks
 def clear():
     opstack.clear()
     dictstack.clear()
-    
 
+# Exchange the top two elements of the operator stack
 def exch():
     if not opstack:
-        
         return False
     temp1 = opPop()
     temp2 = opPop()
     opPush(temp1)
     opPush(temp2)
 
-
+# Roll the top n elements of the operator stack
 def roll():
     x = int(opPop())  
     y = int(opPop())  
-
     if y > len(opstack):
         return False
     x = x % y if x > 0 else -(-x % y)
     temp = opstack[-y:]
-
     if x > 0: 
         temp = temp[-x:] + temp[:-x]
     else:  
@@ -666,77 +572,56 @@ def roll():
         temp = temp[x:] + temp[:x]
     opstack[-y:] = temp
 
-
-    
-        
+# Print the contents of the operator stack
 def stack():
     if not opstack:
-        
         return False
     else:
         for temp in reversed(opstack):
             print(temp)
-    
-    
+
+# Create a new dictionary
 def psDict():
     if len(opstack) > 0:
         opPop()
         opPush({})
     else:
         return False
-    
-    
+
+# Begin a new dictionary
 def begin():
     if len(opstack) > 0:
         temp = opPop()
-        
-        
     else:
         return False
-    
-    
+
+# End the current dictionary
 def end():
     temp = dictstack.pop()
     if isinstance(temp, dict):
         return True
 
-
+# Define a name-value pair in the top dictionary on the dictionary stack
 def psDef():
     temp_value = opstack.pop()
     temp_name = opstack.pop()
-    
     if isinstance(temp_name, str):
         define(temp_name, temp_value)
 
-
-
-
-
-#--------------------------Runner----------------------------------------------
+# Run the interpreter
 def interpreter(s): # s is a string
     interpretSPS(parse(tokenize(s)))
     clear()
-    
 
-
-
-
-#---------------------------------Testing---------------------------------------
-#print(tokenize(input2))
-#print(parse(tokenize(input2)))
-
-
-
-#interpreter(input1)
-#clear()
-#interpreter(input2)
-#clear()
-#interpreter(input3)
-#clear()
+# Testing the interpreter
+# interpreter(input1)
+# clear()
+# interpreter(input2)
+# clear()
+# interpreter(input3)
+# clear()
 #interpreter(input4)
 #clear()
 #interpreter(input5)
 #clear()
 #interpreter(input6)
-
-
