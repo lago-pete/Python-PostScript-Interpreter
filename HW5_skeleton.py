@@ -221,9 +221,10 @@ def commanding(token):
             
             
 def psIf():
+    block = opPop()
     condition = opPop()
     if condition:
-        interpretSPS()
+        interpretSPS(block)
 
 def psIfelse():
     false_block = opPop() 
@@ -237,17 +238,18 @@ def psIfelse():
     else:
         interpretSPS(false_block)
 
-def psFor(start, end, increment, block):
-    for i in range(start, end, increment):
+def psFor():
+    block = opPop()  # Assumes this is a list representing the code block
+    end = int(opPop())  # Convert to int
+    
+    increment = int(opPop())  # Convert to int, assuming it might be coming as a string    
+    start = int(opPop())  # Convert to int
+    
+
+    for i in range(start, end , increment):
         opPush(i)
         interpretSPS(block)
 
-
-
-
-
-
-    #clear opstack and dictstack
 
 
 
@@ -646,17 +648,24 @@ def exch():
 
 
 def roll():
-    num_temp = opPop()
-    move = opPop()
-    
-    
-    temp_move = opstack.index(num_temp) + move
-    opstack.remove(num_temp)
-    
-    if temp_move > len(opstack):
-        opstack.append(num_temp)
-    else:
-        opstack.insert(temp_move, num_temp)
+    x = int(opPop())  
+    y = int(opPop())  
+
+    if y > len(opstack):
+        raise IndexError("Not enough elements on the stack to perform roll")
+    x = x % y if x > 0 else -(-x % y)
+    segment = opstack[-y:]
+
+    if x > 0: 
+        segment = segment[-x:] + segment[:-x]
+    else:  
+        x = -x 
+        segment = segment[x:] + segment[:x]
+
+    # Replace the rolled segment back into the original stack
+    opstack[-y:] = segment
+
+
     
         
 def stack():
@@ -679,6 +688,7 @@ def psDict():
 def begin():
     if len(opstack) > 0:
         temp = opPop()
+        
         
     else:
         return False
@@ -710,16 +720,16 @@ def interpreter(s): # s is a string
 
 #print(tokenize(input2))
 #print(parse(tokenize(input2)))
-#interpreter(input1)
+
+
 
 #interpreter(input1)
 clear()
 #interpreter(input2)
-
 clear()
-interpreter(input3)
+#interpreter(input3)
 clear()
-#interpreter(input4)
+interpreter(input4)
 clear()
 #interpreter(input5)
 clear()
